@@ -35,9 +35,10 @@ for i in range(len(datasets)):
 
 #step 2 - random subspace approach
 means = []
+numberOfSubspaces = 15
 for d in range(len(datasets)):
     subspaceDatasets = []
-    for i in range(10):
+    for i in range(numberOfSubspaces):
         subspaceDatasets.append(datasets[d].GetRandomSubspaceDataset())
     subspaceScores = []
 
@@ -54,7 +55,7 @@ for d in range(len(datasets)):
             predictions.append(classifiers[j].predict(subspaceDatasets[i].X_test))
             subspaceScores.append(accuracy_score(subspaceDatasets[i].y_test, predictions[j]))
     for i in range(len(classifiers)):
-        means.append(mean(subspaceScores[i:(i+1*10)]))
+        means.append(mean(subspaceScores[i*numberOfSubspaces:(i+1)*numberOfSubspaces]))
 
 comparasion = []
 for i in range(len(scores)):
@@ -66,15 +67,15 @@ for i in range(len(datasets)):
     print("Results: for " + datasets[i].name)
     print("Normal approach ")
     print("KNN, GaussianNB, Decision Tree, SVC")
-    print(scores[i:i+4])
+    print(scores[i*len(datasets):(i+1)*len(datasets)])
     print("Subspace approach:")
     print("KNN, GaussianNB, Decision Tree, SVC")
-    print(means[i:i+4])
+    print(means[i*len(datasets):(i+1)*len(datasets)])
     print("Normal approach / Subspace approach")
-    print(comparasion[i:i + 4])
+    print(comparasion[i*len(datasets):(i+1) * len(datasets)])
     print("")
 counter = 0
 for i in range(len(comparasion)):
-    if comparasion[i] < 1:
+    if comparasion[i] <= 1:
         counter = counter +1
-print("In " + str(counter) + " of " + str(len(comparasion)) + " tests achieved higher accuracy with random subspace")
+print("In " + str(counter) + " of " + str(len(comparasion)) + " tests achieved higher or equal accuracy with random subspace")
