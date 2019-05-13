@@ -15,7 +15,7 @@ class Dataset:
 
     def GetRandomSubspaceDataset(self, attNumber=3):
         data = deepcopy(self)
-        attNumber = round(0.8*self.X.shape[1])
+        #attNumber = round(0.8*self.X.shape[1])
         randomIndexes = sample(range(self.X.shape[1]),attNumber)
         data.X = ndarray(shape=(self.X.shape[0],attNumber))
         for i in range(attNumber):

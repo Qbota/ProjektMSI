@@ -3,6 +3,8 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
 from Dataset import Dataset
+from numpy import swapaxes
+from numpy import shape
 from statistics import mean
 
 
@@ -34,48 +36,56 @@ for i in range(len(datasets)):
 
 
 #step 2 - random subspace approach
-means = []
+subspaceScores = []
 numberOfSubspaces = 15
 for d in range(len(datasets)):
     subspaceDatasets = []
+    classifiers = [
+        KNeighborsClassifier(),
+        GaussianNB(),
+        DecisionTreeClassifier(),
+        SVC(gamma='auto')
+    ]
     for i in range(numberOfSubspaces):
         subspaceDatasets.append(datasets[d].GetRandomSubspaceDataset())
-    subspaceScores = []
-
-    for i in range(len(subspaceDatasets)):
-        classifiers = [
-            KNeighborsClassifier(),
-            GaussianNB(),
-            DecisionTreeClassifier(),
-            SVC(gamma='auto')
-        ]
+    for c in range(len(classifiers)):
         predictions = []
-        for j in range(len(classifiers)):
-            classifiers[j].fit(subspaceDatasets[i].X_train, subspaceDatasets[i].y_train)
-            predictions.append(classifiers[j].predict(subspaceDatasets[i].X_test))
-            subspaceScores.append(accuracy_score(subspaceDatasets[i].y_test, predictions[j]))
-    for i in range(len(classifiers)):
-        means.append(mean(subspaceScores[i*numberOfSubspaces:(i+1)*numberOfSubspaces]))
+        y_pred = []
+        for i in range(len(subspaceDatasets)):
+            classifiers[c].fit(subspaceDatasets[i].X_train, subspaceDatasets[i].y_train)
+            predictions.append(classifiers[c].predict(subspaceDatasets[i].X_test))
+        predictions = swapaxes(predictions,0,1)
+        for p in range(len(predictions)):
+            if mean(predictions[p]) >= 0.5:
+                y_pred.append(1)
+            else:
+                y_pred.append(0)
+        subspaceScores.append(accuracy_score(datasets[d].y_test,y_pred))
+
 
 comparasion = []
 for i in range(len(scores)):
-    scores[i] = round(scores[i],2)
-    means[i] = round(means[i],2)
-    comparasion.append(round(scores[i]/means[i],2))
+    comparasion.append(round(scores[i]/subspaceScores[i],2))
+    scores[i] = round(scores[i], 2)
+    subspaceScores[i] = round(subspaceScores[i], 2)
+print(scores)
+print(subspaceScores)
+print(comparasion)
+
 
 for i in range(len(datasets)):
     print("Results: for " + datasets[i].name)
     print("Normal approach ")
     print("KNN, GaussianNB, Decision Tree, SVC")
-    print(scores[i*len(datasets):(i+1)*len(datasets)])
+    print(scores[i*len(classifiers):(i+1)*len(classifiers)])
     print("Subspace approach:")
     print("KNN, GaussianNB, Decision Tree, SVC")
-    print(means[i*len(datasets):(i+1)*len(datasets)])
+    print(subspaceScores[i*len(classifiers):(i+1)*len(classifiers)])
     print("Normal approach / Subspace approach")
-    print(comparasion[i*len(datasets):(i+1) * len(datasets)])
+    print(comparasion[i*len(classifiers):(i+1)*len(classifiers)])
     print("")
 counter = 0
 for i in range(len(comparasion)):
     if comparasion[i] <= 1:
         counter = counter +1
-print("In " + str(counter) + " of " + str(len(comparasion)) + " tests achieved higher or equal accuracy with random subspace")
+print("In " + str(counter) + " of " + str(len(comparasion)) + " tests subspace algorithm achieved higher or equal accuracy with random subspace")
