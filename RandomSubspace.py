@@ -4,11 +4,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import SVC
 from Dataset import Dataset
 from numpy import swapaxes
-from numpy import shape
 from statistics import mean
-
-
-
 from sklearn.metrics import accuracy_score
 #Import data from files
 
@@ -17,6 +13,8 @@ datasets.append(Dataset("datasets\diabetes.csv", "Diabetes set"))
 datasets.append(Dataset("datasets\wine.csv", "Wine set"))
 datasets.append(Dataset("datasets\german.csv", "German set"))
 datasets.append(Dataset("datasets\popfailures.csv","Popfailures set"))
+datasets.append(Dataset("datasets\heart.csv","Heart set"))
+datasets.append(Dataset("datasets\liver.csv","Liver set"))
 
 #step 1 - full data approach
 scores = []
@@ -62,16 +60,12 @@ for d in range(len(datasets)):
                 y_pred.append(0)
         subspaceScores.append(accuracy_score(datasets[d].y_test,y_pred))
 
-
+#step 3 comparasion of results
 comparasion = []
 for i in range(len(scores)):
     comparasion.append(round(scores[i]/subspaceScores[i],2))
     scores[i] = round(scores[i], 2)
     subspaceScores[i] = round(subspaceScores[i], 2)
-print(scores)
-print(subspaceScores)
-print(comparasion)
-
 
 for i in range(len(datasets)):
     print("Results: for " + datasets[i].name)
