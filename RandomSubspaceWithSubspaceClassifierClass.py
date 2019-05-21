@@ -6,6 +6,7 @@ from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 from Dataset import Dataset
 from sklearn import base
+import csv
 from numpy import shape
 datasets = []
 datasets.append(Dataset("datasets\diabetes.csv", "Diabetes set"))
@@ -31,42 +32,51 @@ for i in range(len(datasets)):
         predictions.append(member_clf.predict(datasets[i].X_test))
         scores.append(accuracy_score(datasets[i].y_test, predictions[j]))
 
+csvData = [['Number of subspaces','Tests with subspace algorithm with higher acc','Number of tests']]
+for n in range(5,80,5):
+    for m in range(5):
+
+        #step 2 - subspace approach
+        subspaceScores = []
+        subspacePredictions = []
+        numberOfSubspaces = n
+        for i in range(len(datasets)):
+            subspacePredictions = []
+            for j in range(len(classifiers)):
+                member_clf = base.clone(classifiers[j])
+                sub_clf = SubspaceClassifier(numberOfSubspaces, member_clf)
+                sub_clf.fit(datasets[i].X_train, datasets[i].y_train)
+                subspacePredictions.append(sub_clf.predict(datasets[i].X_test))
+                subspaceScores.append(accuracy_score(datasets[i].y_test, subspacePredictions[j]))
 
 
-#step 2 - subspace approach
-subspaceScores = []
-subspacePredictions = []
-numberOfSubspaces = 20
-for i in range(len(datasets)):
-    subspacePredictions = []
-    for j in range(len(classifiers)):
-        member_clf = base.clone(classifiers[j])
-        sub_clf = SubspaceClassifier(numberOfSubspaces, member_clf)
-        sub_clf.fit(datasets[i].X_train, datasets[i].y_train)
-        subspacePredictions.append(sub_clf.predict(datasets[i].X_test))
-        subspaceScores.append(accuracy_score(datasets[i].y_test, subspacePredictions[j]))
+        #step 3 comparasion of results
+        comparasion = []
+        for i in range(len(scores)):
+            comparasion.append(round(scores[i]/subspaceScores[i],2))
+            scores[i] = round(scores[i], 2)
+            subspaceScores[i] = round(subspaceScores[i], 2)
+
+        for i in range(len(datasets)):
+            print("Results: for " + datasets[i].name)
+            print("Normal approach ")
+            print("KNN, GaussianNB, Decision Tree, SVC")
+            print(scores[i*len(classifiers):(i+1)*len(classifiers)])
+            print("Subspace approach:")
+            print("KNN, GaussianNB, Decision Tree, SVC")
+            print(subspaceScores[i*len(classifiers):(i+1)*len(classifiers)])
+        #    print("Normal approach / Subspace approach")
+        #    print(comparasion[i*len(classifiers):(i+1)*len(classifiers)])
+            print("")
+        counter = 0
+        for i in range(len(comparasion)):
+            if comparasion[i] <= 1:
+                counter = counter +1
+        print("In " + str(counter) + " of " + str(len(comparasion)) + " tests subspace algorithm achieved higher or equal accuracy")
+        csvData.append([str(numberOfSubspaces),str(counter),str(len(comparasion))])
+with open('results.csv', 'w') as csvFile:
+    writer = csv.writer(csvFile)
+    writer.writerows(csvData)
+csvFile.close()
 
 
-#step 3 comparasion of results
-comparasion = []
-for i in range(len(scores)):
-    comparasion.append(round(scores[i]/subspaceScores[i],2))
-    scores[i] = round(scores[i], 2)
-    subspaceScores[i] = round(subspaceScores[i], 2)
-
-for i in range(len(datasets)):
-    print("Results: for " + datasets[i].name)
-    print("Normal approach ")
-    print("KNN, GaussianNB, Decision Tree, SVC")
-    print(scores[i*len(classifiers):(i+1)*len(classifiers)])
-    print("Subspace approach:")
-    print("KNN, GaussianNB, Decision Tree, SVC")
-    print(subspaceScores[i*len(classifiers):(i+1)*len(classifiers)])
-#    print("Normal approach / Subspace approach")
-#    print(comparasion[i*len(classifiers):(i+1)*len(classifiers)])
-    print("")
-counter = 0
-for i in range(len(comparasion)):
-    if comparasion[i] <= 1:
-        counter = counter +1
-print("In " + str(counter) + " of " + str(len(comparasion)) + " tests subspace algorithm achieved higher or equal accuracy")
